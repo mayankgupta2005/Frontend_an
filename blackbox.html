@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Black Box Data & Telemetry — NovaShield</title>
+  <meta name="description"
+    content="Learn what the NovaShield Smart Black Box records during motorcycle rides and accidents, and download official accident report PDFs." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" style="box-shadow: var(--shadow-sm);">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="navbar-logo">N</div>
+        <div>
+          <div class="navbar-brand-text">NovaShield</div>
+          <div class="navbar-brand-sub">Black Box System</div>
+        </div>
+      </a>
+
+      <ul class="navbar-links">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#how-it-works">How It Works</a></li>
+        <li><a href="dashboard.html">Live Dashboard</a></li>
+      </ul>
+
+      <a href="dashboard.html" class="btn btn-primary btn-sm navbar-cta">View Live Demo</a>
+    </div>
+  </nav>
+
+  <main style="padding-top:100px; padding-bottom:80px;">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="section-badge">📦 Black Box Recording</span>
+        <h2>Comprehensive Accident Telemetry</h2>
+        <p>NovaShield continuous recording captures every critical vehicle parameter before, during, and after an
+          incident.</p>
+      </div>
+
+      <!-- Black Box Data Points Grid -->
+      <div class="bb-data-grid" style="margin-bottom:48px;">
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🕐</div>
+          <div class="bb-data-info">
+            <h4>Date & Timestamp</h4>
+            <p>Millisecond-accurate synchronization via GPS atomic time servers for legal timestamping.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">📍</div>
+          <div class="bb-data-info">
+            <h4>GPS Coordinates</h4>
+            <p>Real-time latitude, longitude, altitude, and heading logging with ±2.1m precision.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🏎️</div>
+          <div class="bb-data-info">
+            <h4>Vehicle Speed</h4>
+            <p>Continuous speed calculation logged at 10Hz to measure pre-impact velocity deceleration.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">📐</div>
+          <div class="bb-data-info">
+            <h4>3-Axis Acceleration</h4>
+            <p>X, Y, and Z axis G-force logging up to ±16G to capture exact shock impact direction.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🔄</div>
+          <div class="bb-data-info">
+            <h4>Gyroscope & Lean Angle</h4>
+            <p>Measures bike tilt, pitch, and roll rate up to ±2000°/s to detect slide and rollover events.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">💥</div>
+          <div class="bb-data-info">
+            <h4>Impact Peak Force</h4>
+            <p>Calculates peak impact vector to assist trauma doctors in predicting internal injuries.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🤖</div>
+          <div class="bb-data-info">
+            <h4>AI Confidence Score</h4>
+            <p>On-device neural filter score confirming collision vs normal pothole or sudden braking.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🧑</div>
+          <div class="bb-data-info">
+            <h4>Driver Behaviour</h4>
+            <p>Logs aggressive acceleration, hard cornering, and braking patterns prior to crash.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🎥</div>
+          <div class="bb-data-info">
+            <h4>Loop Video Footage</h4>
+            <p>Encrypted HD camera video clip automatically locked during crash detection.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🔔</div>
+          <div class="bb-data-info">
+            <h4>Emergency Alert Log</h4>
+            <p>Record of SMS delivery, phone calls dispatched, and response ACK from emergency services.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">🔋</div>
+          <div class="bb-data-info">
+            <h4>Battery & System Health</h4>
+            <p>Continuous monitoring of internal 3.7V LiPo reserve power and waterproof seal pressure.</p>
+          </div>
+        </div>
+
+        <div class="card bb-data-item">
+          <div class="bb-data-icon">☁️</div>
+          <div class="bb-data-info">
+            <h4>Cloud Sync State</h4>
+            <p>Real-time encrypted Firebase Firestore & RTDB backup status for instant remote retrieval.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Report Download Box -->
+      <div class="card card-elevated"
+        style="padding:40px; text-align:center; background:linear-gradient(135deg, var(--primary-50), var(--surface)); border-color:var(--primary-100);">
+        <div style="max-width:600px; margin:0 auto;">
+          <div class="card-icon card-icon-primary" style="margin:0 auto 16px;">📄</div>
+          <h3>Official Crash Investigation Report</h3>
+          <p style="color:var(--text-secondary); margin-top:8px; margin-bottom:24px;">
+            NovaShield generates standardized PDF forensic reports recognized by police departments, medical responders,
+            and insurance adjusters for fast claim processing.
+          </p>
+          <button class="btn btn-primary btn-lg"
+            onclick="alert('Generating official NovaShield Black Box Forensic Report (PDF)...')">
+            📥 Download Sample Accident Report PDF
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border-top:none; padding-top:0;">
+        <span>© 2025 NovaShield · Smart Two-Wheeler Black Box</span>
+        <a href="index.html" style="color:white;">Back to Main Page →</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>

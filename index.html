@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NovaShield — Smart Two-Wheeler Accident Detection & Emergency Response</title>
+  <meta name="description"
+    content="NovaShield is an intelligent smart black box that automatically detects motorcycle accidents, shares live GPS location, records accident evidence, and sends emergency alerts in real time." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="navbar-logo">N</div>
+        <div>
+          <div class="navbar-brand-text">NovaShield</div>
+          <div class="navbar-brand-sub">Smart Safety System</div>
+        </div>
+      </a>
+
+      <ul class="navbar-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#problem">Why NovaShield</a></li>
+        <li><a href="#blackbox">Black Box</a></li>
+      </ul>
+
+      <a href="login.html" class="btn btn-primary btn-sm navbar-cta">Get Started</a>
+
+      <button class="navbar-menu-btn" id="menu-btn" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="#features" onclick="closeMobileNav()">Features</a>
+    <a href="#how-it-works" onclick="closeMobileNav()">How It Works</a>
+    <a href="#problem" onclick="closeMobileNav()">Why NovaShield</a>
+    <a href="#blackbox" onclick="closeMobileNav()">Black Box</a>
+    <a href="login.html" onclick="closeMobileNav()">Get Started →</a>
+  </div>
+
+  <!-- ============================================================
+       HERO SECTION
+       ============================================================ -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-badge-wrapper">
+          <span class="section-badge">🛡️ Smart Two-Wheeler Safety</span>
+        </div>
+        <h1 class="hero-title">
+          Smart Two-Wheelers<br />
+          <span class="highlight">BLACKBOX</span>
+        </h1>
+        <p class="hero-subtitle">
+          NovaShield is an intelligent smart black box that automatically detects motorcycle accidents,
+          shares live GPS location, records accident evidence, and sends emergency alerts in real time.
+        </p>
+        <div class="hero-actions">
+          <a href="login.html" class="btn btn-primary btn-lg">Get Started</a>
+          <a href="dashboard.html" class="btn btn-secondary btn-lg">View Live Demo</a>
+          <a href="#demo-video" class="btn btn-ghost btn-lg">▶ Watch How It Works</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-flowchart scroll-animate">
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--emergency-50);">🏍️</div>
+            <div class="flowchart-text">Motorcycle</div>
+          </div>
+          <div class="flowchart-arrow">↓</div>
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--accent-50);">📡</div>
+            <div class="flowchart-text">Sensors</div>
+          </div>
+          <div class="flowchart-arrow">↓</div>
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--emergency-50);">📍</div>
+            <div class="flowchart-text">GPS Location</div>
+          </div>
+          <div class="flowchart-arrow">↓</div>
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--primary-50);">☁️</div>
+            <div class="flowchart-text">Cloud</div>
+          </div>
+          <div class="flowchart-arrow">↓</div>
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--warning-50);">📱</div>
+            <div class="flowchart-text">Emergency Contact</div>
+          </div>
+          <div class="flowchart-arrow">↓</div>
+          <div class="flowchart-card">
+            <div class="flowchart-icon" style="background: var(--emergency-50);">🚑</div>
+            <div class="flowchart-text">Ambulance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       STATS BAR
+       ============================================================ -->
+  <section class="stats-bar">
+    <div class="stats-bar-grid">
+      <div class="stat-item scroll-animate">
+        <h3>1.68L+</h3>
+        <p>Road accident deaths per year in India</p>
+      </div>
+      <div class="stat-item scroll-animate">
+        <h3>44.5%</h3>
+        <p>Fatalities involving two-wheeler riders</p>
+      </div>
+      <div class="stat-item scroll-animate">
+        <h3>30 min</h3>
+        <p>Average emergency response delay</p>
+      </div>
+      <div class="stat-item scroll-animate">
+        <h3>90%+</h3>
+        <p>Motorcycles without crash detection</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PROBLEM SECTION
+       ============================================================ -->
+  <section class="section" id="problem">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">⚡ The Problem</span>
+        <h2>Why Riders Need NovaShield</h2>
+        <p>Current road safety infrastructure leaves two-wheeler riders vulnerable during accidents.</p>
+      </div>
+
+      <div class="problems-grid">
+        <div class="card card-elevated problem-card scroll-animate">
+          <div class="card-icon card-icon-emergency">⏱️</div>
+          <h4>Delayed Emergency Response</h4>
+          <p>Average 30+ minute delay before help arrives at accident sites.</p>
+        </div>
+        <div class="card card-elevated problem-card scroll-animate">
+          <div class="card-icon card-icon-warning">🚫</div>
+          <h4>No Automatic Detection</h4>
+          <p>No system to automatically detect when an accident occurs.</p>
+        </div>
+        <div class="card card-elevated problem-card scroll-animate">
+          <div class="card-icon card-icon-primary">📍</div>
+          <h4>No GPS Emergency Alerts</h4>
+          <p>Families have no way to know the rider's location during emergencies.</p>
+        </div>
+        <div class="card card-elevated problem-card scroll-animate">
+          <div class="card-icon card-icon-accent">📋</div>
+          <h4>No Accident Evidence</h4>
+          <p>No recorded data for insurance claims or police investigations.</p>
+        </div>
+        <div class="card card-elevated problem-card scroll-animate">
+          <div class="card-icon card-icon-warning">💰</div>
+          <h4>Expensive Existing Solutions</h4>
+          <p>Current solutions are costly and not designed for two-wheelers.</p>
+        </div>
+      </div>
+
+      <div class="solution-callout scroll-animate">
+        <p>🛡️ NovaShield solves all these problems in <strong>one affordable smart black box</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HOW IT WORKS
+       ============================================================ -->
+  <section class="section" id="how-it-works" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">🔄 How It Works</span>
+        <h2>From Ride to Rescue</h2>
+        <p>NovaShield works automatically — no manual intervention needed.</p>
+      </div>
+
+      <div class="workflow scroll-animate">
+        <div class="workflow-step">
+          <div class="workflow-step-icon">🏍️</div>
+          <div class="workflow-step-label">Ride Starts</div>
+          <div class="workflow-step-num">Step 1</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">📡</div>
+          <div class="workflow-step-label">Sensors Monitor Vehicle</div>
+          <div class="workflow-step-num">Step 2</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">💥</div>
+          <div class="workflow-step-label">Accident Detected</div>
+          <div class="workflow-step-num">Step 3</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">🤖</div>
+          <div class="workflow-step-label">AI Verifies Crash</div>
+          <div class="workflow-step-num">Step 4</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">📍</div>
+          <div class="workflow-step-label">GPS Gets Live Location</div>
+          <div class="workflow-step-num">Step 5</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">📲</div>
+          <div class="workflow-step-label">Emergency SMS Sent</div>
+          <div class="workflow-step-num">Step 6</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">🎥</div>
+          <div class="workflow-step-label">Video Recording Starts</div>
+          <div class="workflow-step-num">Step 7</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">📦</div>
+          <div class="workflow-step-label">Black Box Stores Data</div>
+          <div class="workflow-step-num">Step 8</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">☁️</div>
+          <div class="workflow-step-label">Cloud Backup</div>
+          <div class="workflow-step-num">Step 9</div>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-step-icon">🚑</div>
+          <div class="workflow-step-label">Family, Police & Hospital Notified</div>
+          <div class="workflow-step-num">Step 10</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FEATURES
+       ============================================================ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">✨ Features</span>
+        <h2>Everything You Need for Rider Safety</h2>
+        <p>A complete suite of safety features packed into one smart device.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-emergency">💥</div>
+          <h4>Automatic Crash Detection</h4>
+          <p>IMU sensors with AI algorithms detect crashes instantly and trigger the emergency response pipeline.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-primary">📍</div>
+          <h4>Real-Time GPS Tracking</h4>
+          <p>Live GPS tracking with ±2m accuracy. Family members can monitor ride progress in real time.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-emergency">🆘</div>
+          <h4>Emergency SOS</h4>
+          <p>Automatic SOS alerts sent to emergency contacts, police, and nearby hospitals within 30 seconds.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-accent">🤖</div>
+          <h4>AI Crash Verification</h4>
+          <p>Machine learning algorithms verify crashes to reduce false positives and ensure accurate alerts.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-primary">📦</div>
+          <h4>Black Box Data Recording</h4>
+          <p>Records speed, acceleration, gyroscope, GPS, and impact data — like an aircraft black box.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-accent">🎥</div>
+          <h4>Video Recording</h4>
+          <p>Continuous video recording with loop storage. Crash footage is preserved automatically.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-primary">☁️</div>
+          <h4>Cloud Backup</h4>
+          <p>All data is backed up to the cloud in real time. Access accident reports from anywhere.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-accent">📊</div>
+          <h4>Ride Analytics</h4>
+          <p>Track riding patterns, driving score, and receive insights to improve road safety habits.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-warning">🔋</div>
+          <h4>Battery Backup</h4>
+          <p>Built-in battery ensures the device keeps working even after the vehicle's power is cut in a crash.</p>
+        </div>
+        <div class="card card-elevated feature-card scroll-animate">
+          <div class="card-icon card-icon-primary">🔧</div>
+          <h4>Universal Bike Installation</h4>
+          <p>Compact, waterproof design fits any motorcycle. Simple installation with no modifications needed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       VIDEO DEMO
+       ============================================================ -->
+  <section class="section cinematic-section" id="demo-video" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">🎬 Demo</span>
+        <h2>Watch How It Works</h2>
+        <p>See NovaShield in action — from crash detection to emergency response.</p>
+      </div>
+    </div>
+    <div class="cinematic-sticky-container">
+      <div class="cinematic-video-wrapper">
+        <video src="No_I_have_given_the_screensho.mp4" autoplay loop muted playsinline></video>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MISSION & VISION
+       ============================================================ -->
+  <section class="section" id="mission">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">🎯 Our Purpose</span>
+        <h2>Mission & Vision</h2>
+      </div>
+
+      <div class="mission-grid">
+        <div class="card card-elevated mission-card scroll-animate">
+          <div class="card-icon card-icon-primary" style="margin:0 auto 16px;">🎯</div>
+          <h3>Our Mission</h3>
+          <p>To reduce motorcycle accident fatalities by providing affordable intelligent emergency response technology
+            accessible to every rider.</p>
+        </div>
+        <div class="card card-elevated mission-card scroll-animate">
+          <div class="card-icon card-icon-accent" style="margin:0 auto 16px;">🌍</div>
+          <h3>Our Vision</h3>
+          <p>Making intelligent crash protection available on every motorcycle — because every ride deserves to be a
+            safe ride.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       EMERGENCY QR CODE
+       ============================================================ -->
+  <section class="section" style="background: var(--surface);">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">📱 Instant Access</span>
+        <h2>Emergency QR Code</h2>
+        <p>Each Black Box has a QR Code. When scanned by a bystander, it instantly displays critical information.</p>
+      </div>
+
+      <div class="qr-section scroll-animate">
+        <div>
+          <ul class="qr-info-list">
+            <li><span>👤</span> <span>Rider Name</span></li>
+            <li><span>🩸</span> <span>Blood Group</span></li>
+            <li><span>📱</span> <span>Emergency Contacts</span></li>
+            <li><span>🏥</span> <span>Medical Notes & Allergies</span></li>
+            <li><span>📍</span> <span>Current GPS Location</span></li>
+            <li><span>🚑</span> <span>Call Ambulance Button</span></li>
+            <li><span>🗺️</span> <span>Navigate to Rider</span></li>
+            <li><span>📤</span> <span>Share Live Location</span></li>
+          </ul>
+        </div>
+        <div style="text-align:center;">
+          <div class="qr-mockup">📱</div>
+          <p style="margin-top:16px;color:var(--text-secondary);font-size:0.9rem;">Scan → Instant rider info</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BLACK BOX SECTION
+       ============================================================ -->
+  <section class="section" id="blackbox">
+    <div class="container">
+      <div class="section-header scroll-animate">
+        <span class="section-badge">📦 Black Box</span>
+        <h2>What the Black Box Records</h2>
+        <p>Every critical data point is captured and stored for investigation and insurance claims.</p>
+      </div>
+
+      <div class="bb-data-grid">
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🕐</div>
+          <div class="bb-data-info">
+            <h4>Date & Time</h4>
+            <p>Precise timestamp of every event</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">📍</div>
+          <div class="bb-data-info">
+            <h4>GPS Location</h4>
+            <p>Coordinates with ±2m accuracy</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🏎️</div>
+          <div class="bb-data-info">
+            <h4>Vehicle Speed</h4>
+            <p>Real-time speed logging</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">📐</div>
+          <div class="bb-data-info">
+            <h4>Acceleration Data</h4>
+            <p>3-axis accelerometer readings</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🔄</div>
+          <div class="bb-data-info">
+            <h4>Gyroscope</h4>
+            <p>Lean angle and rotational data</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">💥</div>
+          <div class="bb-data-info">
+            <h4>Impact Force</h4>
+            <p>G-force measurement at impact</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🤖</div>
+          <div class="bb-data-info">
+            <h4>AI Confidence</h4>
+            <p>Crash verification confidence score</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🧑</div>
+          <div class="bb-data-info">
+            <h4>Driver Behaviour</h4>
+            <p>Riding pattern analysis</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🎥</div>
+          <div class="bb-data-info">
+            <h4>Video Recording</h4>
+            <p>Continuous loop recording</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🔔</div>
+          <div class="bb-data-info">
+            <h4>Alert Status</h4>
+            <p>Emergency notification tracking</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">🔋</div>
+          <div class="bb-data-info">
+            <h4>Battery Status</h4>
+            <p>Device power monitoring</p>
+          </div>
+        </div>
+        <div class="card bb-data-item scroll-animate">
+          <div class="bb-data-icon">☁️</div>
+          <div class="bb-data-info">
+            <h4>Cloud Backup</h4>
+            <p>Real-time sync status</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:40px;" class="scroll-animate">
+        <a href="blackbox.html" class="btn btn-primary btn-lg">View Full Black Box Report →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <div class="footer-brand-logo">N</div>
+            <div class="footer-brand-name">NovaShield</div>
+          </div>
+          <p class="footer-desc">
+            Smart two-wheeler black box with automatic crash detection, GPS emergency alerts, and ride telematics.
+            Making every ride safer.
+          </p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul class="footer-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#blackbox">Black Box</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Dashboards</h4>
+          <ul class="footer-links">
+            <li><a href="dashboard.html">Rider Dashboard</a></li>
+            <li><a href="dashboard.html">Parent Dashboard</a></li>
+            <li><a href="dashboard.html">Police Dashboard</a></li>
+            <li><a href="dashboard.html">Admin Dashboard</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Get Started</h4>
+          <ul class="footer-links">
+            <li><a href="login.html">Sign In</a></li>
+            <li><a href="onboarding.html">Create Account</a></li>
+            <li><a href="blackbox.html">Black Box Info</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Cinematic video intersection effect
+    const cinematicSection = document.querySelector('.cinematic-section');
+    const cinematicWrapper = document.querySelector('.cinematic-video-wrapper');
+
+    if (cinematicSection && cinematicWrapper) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            cinematicWrapper.classList.add('fullscreen-mode');
+          } else {
+            cinematicWrapper.classList.remove('fullscreen-mode');
+          }
+        });
+      }, { threshold: 0.5 }); // Triggers when 50% of the section is visible
+
+      observer.observe(cinematicSection);
+    }
+
+    // Mobile nav toggle
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    menuBtn.addEventListener('click', () => {
+      mobileNav.classList.toggle('open');
+      menuBtn.textContent = mobileNav.classList.contains('open') ? '✕' : '☰';
+    });
+    function closeMobileNav() {
+      mobileNav.classList.remove('open');
+      menuBtn.textContent = '☰';
+    }
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.scroll-animate').forEach(el => observer.observe(el));
+  </script>
+</body>
+
+</html>

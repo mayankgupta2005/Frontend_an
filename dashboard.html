@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NovaShield — Emergency Response & Telematics Platform</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+
+<body class="dash-layout">
+
+  <!-- ============================================================
+       TOP NAVIGATION BAR
+       ============================================================ -->
+  <nav class="navbar" style="box-shadow: var(--shadow-sm);">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-brand">
+        <div class="navbar-logo">N</div>
+        <div>
+          <div class="navbar-brand-text">NovaShield</div>
+          <div class="navbar-brand-sub">Emergency Platform</div>
+        </div>
+      </a>
+
+      <div style="display:flex; align-items:center; gap:16px;">
+        <span class="status-badge status-safe" id="system-status-badge">
+          <span class="status-dot status-dot-green" id="system-status-dot"></span>
+          <span id="system-status-text">System Armed · Safe</span>
+        </span>
+        <button id="sim-crash-btn" class="btn btn-emergency btn-sm">⚡ Simulate Crash</button>
+        <a href="#" id="logout-btn" class="btn btn-ghost btn-sm" style="color:var(--text-secondary);">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Loading Splash Screen -->
+  <div id="loading-splash" class="loading-splash">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Connecting to NovaShield Telemetry...</div>
+  </div>
+
+  <main class="dash-body">
+
+    <!-- ============================================================
+         DASHBOARD ROLE TABS
+         ============================================================ -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" data-tab="rider-view">
+        <span class="dash-tab-icon">🏍️</span> Rider Dashboard
+      </button>
+      <button class="dash-tab" data-tab="parent-view">
+        <span class="dash-tab-icon">👨‍👩‍👧</span> Parent & Family View
+      </button>
+      <button class="dash-tab" data-tab="police-view">
+        <span class="dash-tab-icon">🚓</span> Police & Investigation
+      </button>
+      <button class="dash-tab" data-tab="admin-view">
+        <span class="dash-tab-icon">⚙️</span> Admin Telemetry
+      </button>
+    </div>
+
+    <!-- ============================================================
+         1. RIDER DASHBOARD VIEW
+         ============================================================ -->
+    <div class="dash-view active" id="rider-view">
+      
+      <!-- Action Buttons Row -->
+      <div class="dash-actions-row">
+        <button class="btn btn-ghost btn-sm btn-pill">📞 Call Rider</button>
+        <button class="btn btn-ghost btn-sm btn-pill">📍 Share Location</button>
+        <button class="btn btn-outline-danger btn-sm btn-pill">🚨 SOS</button>
+        <button class="btn btn-ghost btn-sm btn-pill">⬇ Download Report</button>
+      </div>
+
+      <!-- Safe Banner -->
+      <div class="rider-safe-banner">
+        <div class="safe-banner-left">
+          <div class="safe-banner-icon"></div>
+          <div>
+            <h2 class="safe-banner-title">RIDER SAFE</h2>
+            <div class="safe-banner-subtitle">Last Updated: Just now</div>
+          </div>
+        </div>
+        <div class="safe-banner-right">
+          <div class="safe-banner-metric">
+            <div class="safe-banner-label">CURRENT SPEED</div>
+            <div class="safe-banner-value">42 km/h</div>
+          </div>
+          <div class="safe-banner-metric">
+            <div class="safe-banner-label">LOCATION</div>
+            <div class="safe-banner-value">Rohini, Delhi</div>
+          </div>
+          <div class="safe-banner-metric">
+            <div class="safe-banner-label">ETA HOME</div>
+            <div class="safe-banner-value">15 min</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Stat Cards -->
+      <div class="dash-grid-4">
+        <div class="card stat-card">
+          <div class="stat-card-icon" style="background:#e8f4fc; color:var(--primary);">🚴</div>
+          <div class="stat-card-info">
+            <div class="stat-card-label">Speed</div>
+            <div class="stat-card-value">0</div>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-card-icon" style="background:#fce8ea; color:var(--emergency);">📍</div>
+          <div class="stat-card-info">
+            <div class="stat-card-label">GPS</div>
+            <div class="stat-card-value">Locked</div>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-card-icon" style="background:#e8f0fc; color:var(--primary);">📶</div>
+          <div class="stat-card-info">
+            <div class="stat-card-label">Network</div>
+            <div class="stat-card-value">Strong</div>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-card-icon" style="background:#e8fceb; color:var(--accent);">🔋</div>
+          <div class="stat-card-info">
+            <div class="stat-card-label">Battery</div>
+            <div class="stat-card-value">87%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Section: Map + Right Cards -->
+      <div class="dash-grid-main">
+        <!-- Left Map -->
+        <div class="card map-large-card">
+          <div class="card-header">
+            <span class="card-title">LIVE GPS TRACKING</span>
+            <span class="status-badge status-online" style="background:transparent; border:none; padding:0; font-size:0.75rem;">● Active Session</span>
+          </div>
+          <div class="map-container" style="height: 500px; margin-top: 12px;">
+            <div id="map"></div>
+            <div class="map-overlay-info" id="map-coords" style="bottom: 12px; left: 12px; right: auto;">
+              LAT 29.3909° N · LON 76.9635° E · Accuracy ±2.1m
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Vertical Cards -->
+        <div class="dash-grid-vertical">
+          
+          <!-- AI SAFETY ASSISTANT -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title" style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🤖</span> AI SAFETY ASSISTANT
+              </span>
+            </div>
+            <div class="ai-assistant-list">
+              <div class="ai-item">
+                <div class="ai-icon">🚴</div>
+                <div class="ai-text">
+                  <strong>Ride Style: Stable</strong>
+                  <span>No harsh braking detected in the last 15 mins.</span>
+                </div>
+              </div>
+              <div class="ai-item">
+                <div class="ai-icon">🛡️</div>
+                <div class="ai-text">
+                  <strong>Crash Probability: Very Low</strong>
+                  <span>Helmet detected. Safe distance maintained.</span>
+                </div>
+              </div>
+              <div class="ai-item">
+                <div class="ai-icon">💡</div>
+                <div class="ai-text">
+                  <strong style="color:var(--primary);">Recommendation</strong>
+                  <span>Traffic ahead in 2km. Brake pads in good condition.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACCIDENT TIMELINE -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ACCIDENT TIMELINE</span>
+            </div>
+            <div class="timeline" style="margin-top:12px;">
+              <div class="timeline-item">
+                <div class="timeline-dot completed" style="margin-top:4px;"></div>
+                <div class="timeline-content timeline-card">
+                  <span class="timeline-time">15:12</span>
+                  <div style="font-weight:500;">Ride Started (Sector 11)</div>
+                </div>
+              </div>
+              <div class="timeline-item" style="margin-top:16px;">
+                <div class="timeline-dot completed" style="margin-top:4px;"></div>
+                <div class="timeline-content timeline-card">
+                  <span class="timeline-time">15:24</span>
+                  <div style="font-weight:500;">Reached Highway</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DEVICE & RIDER HEALTH -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">DEVICE & RIDER HEALTH</span>
+            </div>
+            
+            <div class="health-overview" style="margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:0.875rem;">Safety Score</span>
+                <strong class="text-accent">94/100</strong>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                <div style="display:flex; gap:4px;">
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--accent); border-radius:2px;"></div>
+                  <div style="width:12px; height:20px; background:var(--border-light); border-radius:2px;"></div>
+                </div>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Excellent Rider</span>
+              </div>
+
+              <div class="health-row">
+                <span>Battery</span>
+                <span class="status-badge" style="background:#e8fceb; color:var(--accent); border:none;"><span class="status-dot status-dot-green"></span> Excellent</span>
+              </div>
+              <div class="health-row">
+                <span>GPS Module</span>
+                <span class="status-badge" style="background:#e8fceb; color:var(--accent); border:none;"><span class="status-dot status-dot-green"></span> Locked</span>
+              </div>
+              <div class="health-row">
+                <span>GSM Network</span>
+                <span class="status-badge" style="background:#fff3cd; color:#856404; border:none;"><span class="status-dot" style="background:#ffc107;"></span> Medium</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bottom Section: 3 Columns -->
+      <div class="dash-grid-3" style="margin-top:20px;">
+        
+        <!-- TODAY'S RIDE ANALYTICS -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">TODAY'S RIDE ANALYTICS</span>
+          </div>
+          <div class="analytics-list" style="margin-top:16px;">
+            <div class="analytics-item">
+              <span>Distance</span>
+              <strong>18 km</strong>
+            </div>
+            <div class="analytics-item">
+              <span>Max Speed</span>
+              <strong>71 km/h</strong>
+            </div>
+            <div class="analytics-item">
+              <span>Harsh Brakes</span>
+              <strong style="color:#ffc107;">2</strong>
+            </div>
+            <div class="analytics-item">
+              <span>Turns</span>
+              <strong>31</strong>
+            </div>
+            <div class="analytics-item">
+              <span>Ride Duration</span>
+              <strong>42 min</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMERGENCY CONTACTS -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">EMERGENCY CONTACTS</span>
+          </div>
+          <div class="contacts-list" style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
+            <div class="contact-card">
+              <span class="contact-name">👩 Mother</span>
+              <button class="btn btn-primary btn-sm" style="border-radius:20px; width:100px;">📞 Call</button>
+            </div>
+            <div class="contact-card">
+              <span class="contact-name">👨 Father</span>
+              <button class="btn btn-primary btn-sm" style="border-radius:20px; width:100px;">📞 Call</button>
+            </div>
+            <div class="contact-card contact-card-danger">
+              <span class="contact-name">🚑 Ambulance</span>
+              <button class="btn btn-emergency btn-sm" style="border-radius:20px; width:100px;">Dial 108</button>
+            </div>
+            <div class="contact-card contact-card-police">
+              <span class="contact-name" style="color:white;">🚓 Police</span>
+              <button class="btn btn-sm" style="background:white; color:var(--primary); border-radius:20px; width:100px;">Dial 112</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLACK BOX RECORDER -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" style="display:flex; align-items:center; gap:8px;"><span style="display:inline-block; width:10px; height:10px; background:#333; border-radius:2px;"></span> BLACK BOX RECORDER</span>
+            <span style="font-size:0.7rem; color:var(--accent);">● Recording</span>
+          </div>
+          
+          <div style="display:flex; justify-content:space-between; margin-top:16px; margin-bottom:20px;">
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Storage</div>
+              <strong style="font-size:1.1rem;">82% Free</strong>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Last Sync</div>
+              <strong style="font-size:1.1rem; color:var(--accent);">5 sec ago</strong>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <button class="btn btn-ghost" style="border:1px solid var(--border-light); width:100%; justify-content:center; background:#f8f9fa;">📊 Download Logs</button>
+            <button class="btn btn-ghost" style="border:1px solid var(--border-light); width:100%; justify-content:center; background:#f8f9fa;">📉 Download Sensor Data</button>
+            <button class="btn btn-outline" style="width:100%; justify-content:center; border-color:var(--primary); color:var(--primary);">▶ Replay Accident</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         2. PARENT DASHBOARD VIEW
+         ============================================================ -->
+    <div class="dash-view" id="parent-view">
+      <div class="dash-grid">
+
+        <!-- Large Status Card -->
+        <div class="dash-col-12">
+          <div class="parent-status-card safe" id="parent-status-card">
+            <div class="parent-status-icon" id="parent-status-icon">🛡️</div>
+            <div class="parent-status-text" id="parent-status-text">RIDER IS SAFE</div>
+            <div class="parent-status-sub" id="parent-status-sub">No accident or crash detected. Normal riding
+              parameters.</div>
+          </div>
+        </div>
+
+        <!-- Map & Actions -->
+        <div class="dash-col-8">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Live Rider Location</span>
+              <span class="status-badge status-online">● GPS Live Sync</span>
+            </div>
+            <div class="map-container" style="min-height:350px;">
+              <div id="parent-map" style="width:100%;height:100%;position:absolute;"></div>
+            </div>
+
+            <div class="action-buttons" style="margin-top:20px;">
+              <button class="action-btn" onclick="alert('Calling rider...')">📞 Call Rider</button>
+              <button class="action-btn" onclick="alert('Opening Google Maps navigation...')">🗺️ Navigate to
+                Rider</button>
+              <button class="action-btn" onclick="alert('Live location link copied!')">📤 Share Location</button>
+              <button class="action-btn action-btn-emergency" onclick="alert('Dialing emergency services 112...')">🚨
+                Call Emergency Services</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rider Medical & Status Info -->
+        <div class="dash-col-4">
+          <div class="card">
+            <span class="card-title">Rider Medical & Safety Details</span>
+
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+              <div
+                style="display:flex; justify-content:space-between; padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+                <span style="color:var(--text-secondary);">Blood Group</span>
+                <strong class="text-primary" id="parent-blood">O+</strong>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+                <span style="color:var(--text-secondary);">Helmet Status</span>
+                <strong class="text-accent">✓ Fastened</strong>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+                <span style="color:var(--text-secondary);">Medical Notes</span>
+                <span>No Known Conditions</span>
+              </div>
+              <div
+                style="display:flex; justify-content:space-between; padding:10px; background:var(--bg); border-radius:var(--radius-sm);">
+                <span style="color:var(--text-secondary);">ETA to Destination</span>
+                <span>~ 14 mins</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="card" style="margin-top:20px;">
+            <span class="card-title" style="margin-bottom:16px; display:block;">Incident & Rescue Timeline</span>
+
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot completed"></div>
+                <div class="timeline-content">
+                  <h4>Ride Started</h4>
+                  <p>14:00:12 · Origin Sector 4</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot pending" id="tl-crash-dot"></div>
+                <div class="timeline-content">
+                  <h4>Accident Detected</h4>
+                  <p id="tl-crash-text">No crash detected</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot pending" id="tl-sos-dot"></div>
+                <div class="timeline-content">
+                  <h4>SOS Alert Dispatched</h4>
+                  <p id="tl-sos-text">Standby</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot pending" id="tl-amb-dot"></div>
+                <div class="timeline-content">
+                  <h4>Ambulance & Hospital Assigned</h4>
+                  <p id="tl-amb-text">Standby</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         3. POLICE & INVESTIGATION DASHBOARD VIEW
+         ============================================================ -->
+    <div class="dash-view" id="police-view">
+      <div class="dash-grid">
+
+        <!-- Crash Summary -->
+        <div class="dash-col-12">
+          <div class="card" style="background:var(--primary-50); border-color:var(--primary-100);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+              <div>
+                <h3 style="font-size:1.2rem; color:var(--primary-dark);">Accident Forensic Investigation Unit</h3>
+                <p style="color:var(--text-secondary); font-size:0.875rem;">Black Box Telemetry & Impact Evidence
+                  Analysis Log</p>
+              </div>
+              <button class="btn btn-primary"
+                onclick="alert('Downloading Official Crash Investigation PDF Report...')">📥 Download PDF Forensic
+                Report</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Data Cards -->
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-emergency" id="police-impact-g">5.4 G</div>
+            <div class="metric-label">Peak Impact Force</div>
+          </div>
+        </div>
+
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-primary">58 km/h</div>
+            <div class="metric-label">Pre-Crash Speed</div>
+          </div>
+        </div>
+
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-accent">85°</div>
+            <div class="metric-label">Maximum Rollover Lean</div>
+          </div>
+        </div>
+
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value">98.2%</div>
+            <div class="metric-label">AI Crash Confidence</div>
+          </div>
+        </div>
+
+        <!-- Crash Map & Route -->
+        <div class="dash-col-8">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Accident Location & Path Trajectory</span>
+              <span class="status-badge status-alert">GPS Coordinates Locked</span>
+            </div>
+            <div class="map-container" style="min-height:360px;">
+              <div id="police-map" style="width:100%;height:100%;position:absolute;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video & Photo Evidence -->
+        <div class="dash-col-4">
+          <div class="card">
+            <span class="card-title">Recorded Evidence</span>
+            <div style="margin-top:16px; border-radius:var(--radius); overflow:hidden; background:#000;">
+              <video src="No_I_have_given_the_screensho.mp4" controls
+                style="width:100%; height:180px; object-fit:cover;"></video>
+            </div>
+            <div style="margin-top:12px; font-size:0.8rem; color:var(--text-secondary);">
+              <strong>Video Clip:</strong> 10s pre-impact to 15s post-impact.<br />
+              <strong>File Hash:</strong> <code>0x8f2a99c1e4d7</code> (Tamper-proof)
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:20px;">
+            <span class="card-title">Black Box Data Summary</span>
+            <ul class="hw-status-list" style="margin-top:12px;">
+              <li class="hw-status-item">
+                <span>Timestamp</span>
+                <span>14:02:11 IST</span>
+              </li>
+              <li class="hw-status-item">
+                <span>Location</span>
+                <span>Sector 4, Cyber Highway</span>
+              </li>
+              <li class="hw-status-item">
+                <span>Primary Cause</span>
+                <span>Sudden Lateral Deceleration</span>
+              </li>
+              <li class="hw-status-item">
+                <span>Cloud Storage</span>
+                <span class="text-accent">✓ Verified Sync</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         4. ADMIN DASHBOARD VIEW
+         ============================================================ -->
+    <div class="dash-view" id="admin-view">
+      <div class="dash-grid">
+
+        <!-- Technical Telemetry Header -->
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-accent">Online</div>
+            <div class="metric-label">ESP32 MCU Status</div>
+          </div>
+        </div>
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-primary">NEO-6M</div>
+            <div class="metric-label">GPS Module Lock</div>
+          </div>
+        </div>
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value text-accent">-71 dBm</div>
+            <div class="metric-label">SIM800L Signal</div>
+          </div>
+        </div>
+        <div class="dash-col-3">
+          <div class="card metric-card">
+            <div class="metric-value">v1.0.3</div>
+            <div class="metric-label">Firmware Version</div>
+          </div>
+        </div>
+
+        <!-- Hardware System Status -->
+        <div class="dash-col-6">
+          <div class="card">
+            <span class="card-title">Hardware Diagnostic Overview</span>
+            <ul class="hw-status-list" style="margin-top:16px;">
+              <li class="hw-status-item">
+                <span>Microcontroller (ESP32-WROOM-32)</span>
+                <span><span class="status-dot status-dot-green"></span> 240MHz · 100% OK</span>
+              </li>
+              <li class="hw-status-item">
+                <span>IMU Sensor (MPU6050 6-Axis)</span>
+                <span><span class="status-dot status-dot-green"></span> 200Hz Sampling</span>
+              </li>
+              <li class="hw-status-item">
+                <span>GPS Receiver (NEO-6M)</span>
+                <span><span class="status-dot status-dot-green"></span> 11 Satellites Locked</span>
+              </li>
+              <li class="hw-status-item">
+                <span>Cellular Modem (SIM800L GSM)</span>
+                <span><span class="status-dot status-dot-green"></span> 4G LTE Backup</span>
+              </li>
+              <li class="hw-status-item">
+                <span>LiPo Backup Battery</span>
+                <span><span class="status-dot status-dot-green"></span> 3.7V 1200mAh (87%)</span>
+              </li>
+              <li class="hw-status-item">
+                <span>SD Card Flash Storage</span>
+                <span><span class="status-dot status-dot-green"></span> 34% Used of 32GB</span>
+              </li>
+              <li class="hw-status-item">
+                <span>IP67 Waterproof Enclosure</span>
+                <span><span class="status-dot status-dot-green"></span> Seals Intact</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- System Activity Log -->
+        <div class="dash-col-6">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Live System Event Stream</span>
+              <span class="status-badge status-online" id="rtdb-status">● RTDB Live</span>
+            </div>
+            <div id="event-log"
+              style="max-height:280px; overflow-y:auto; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
+              <!-- JS Populates Logs -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Registered Devices Summary -->
+        <div class="dash-col-12">
+          <div class="card">
+            <span class="card-title">Connected Network Devices</span>
+            <div
+              style="display:flex; justify-content:space-around; margin-top:20px; text-align:center; flex-wrap:wrap; gap:16px;">
+              <div>
+                <h4 style="font-size:1.5rem;" class="text-primary">1,420</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Active BlackBox Units</p>
+              </div>
+              <div>
+                <h4 style="font-size:1.5rem;" class="text-accent">99.8%</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Network Uptime</p>
+              </div>
+              <div>
+                <h4 style="font-size:1.5rem;" class="text-emergency">3</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Accidents Handled Today</p>
+              </div>
+              <div>
+                <h4 style="font-size:1.5rem;">4.2s</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Avg. Alert Dispatch Time</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       EMERGENCY MODE OVERLAY (SIGNATURE FEATURE)
+       ============================================================ -->
+  <div class="emergency-overlay" id="crash-overlay">
+    <div class="emergency-banner">
+      ⚠ ACCIDENT DETECTED
+    </div>
+
+    <div class="emergency-countdown">
+      <div class="emergency-countdown-num" id="crash-countdown">10</div>
+      <div class="emergency-countdown-label">Seconds until automatic emergency service dispatch</div>
+    </div>
+
+    <div class="emergency-info-grid">
+      <div class="emergency-info-item">
+        <span class="emergency-info-icon">📍</span>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Live Location</div>
+          <strong>LAT 29.3909° N, LON 76.9635° E</strong>
+        </div>
+      </div>
+      <div class="emergency-info-item">
+        <span class="emergency-info-icon">📱</span>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Contacts</div>
+          <strong id="crash-emg-num">Notifying Parents & Emergency Contacts</strong>
+        </div>
+      </div>
+      <div class="emergency-info-item">
+        <span class="emergency-info-icon">🎥</span>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Evidence</div>
+          <strong class="text-accent">Video Recording Active</strong>
+        </div>
+      </div>
+      <div class="emergency-info-item">
+        <span class="emergency-info-icon">🚑</span>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Ambulance ETA</div>
+          <strong class="text-emergency">~ 8 Minutes</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="emergency-actions">
+      <button class="action-btn action-btn-emergency" onclick="alert('Calling Ambulance 108...')">📞 Call Ambulance
+        (108)</button>
+      <button class="action-btn action-btn-emergency" onclick="alert('Calling Police 112...')">🚓 Call Police
+        (112)</button>
+      <button class="action-btn" onclick="alert('Opening map navigation...')">🗺️ Navigate to Rider</button>
+      <button class="action-btn" onclick="alert('Location link shared to WhatsApp/SMS...')">📤 Share Live
+        Location</button>
+    </div>
+
+    <button class="btn btn-secondary" id="cancel-sos-btn"
+      style="background:white; color:var(--text); border:1px solid var(--border);">
+      ✕ Cancel False Alarm
+    </button>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script type="module">
+    import BlackBox from './app.js';
+    window.BlackBox = BlackBox;
+    BlackBox.setupDashboard();
+  </script>
+</body>
+
+</html>

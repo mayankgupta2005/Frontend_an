@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In — NovaShield</title>
+  <meta name="description"
+    content="Sign in to your NovaShield account to access your rider dashboard and safety features." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="auth-page">
+    <div class="card card-elevated auth-card">
+      <a href="index.html" class="auth-back-link">← Back to Home</a>
+
+      <div style="text-align:center;margin-bottom:24px;">
+        <div class="navbar-logo" style="margin:0 auto 12px;width:48px;height:48px;font-size:1.3rem;">N</div>
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to your NovaShield account</p>
+      </div>
+
+      <form id="auth-form" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="auth-email">Email Address</label>
+          <input required type="email" id="auth-email" placeholder="rider@example.com" class="form-input"
+            autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="auth-password">Password</label>
+          <input required type="password" id="auth-password" placeholder="••••••••" class="form-input"
+            autocomplete="current-password" minlength="6" />
+        </div>
+
+        <div id="auth-error" class="form-error"></div>
+        <div id="auth-success" class="form-success"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;" id="auth-btn">
+          <span id="auth-btn-label">Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-divider">OR</div>
+
+      <div class="auth-link-row">
+        New rider? <a href="onboarding.html">Create your account →</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    // If already logged in, verify rider profile exists before auto-redirect
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const riderSnap = await getDoc(doc(db, 'riders', user.uid));
+          if (riderSnap.exists()) {
+            window.location.href = 'dashboard.html';
+          }
+        } catch (e) {
+          console.warn('[AUTH] Could not verify rider profile:', e);
+        }
+      }
+    });
+
+    const btnLabel = document.getElementById('auth-btn-label');
+    const authForm = document.getElementById('auth-form');
+    const errorEl = document.getElementById('auth-error');
+    const successEl = document.getElementById('auth-success');
+    const authBtn = document.getElementById('auth-btn');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      successEl.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      successEl.textContent = msg;
+      successEl.style.display = 'block';
+      errorEl.style.display = 'none';
+    }
+
+    function getFirebaseErrorMessage(code) {
+      const messages = {
+        'auth/invalid-credential': 'Invalid email or password.',
+        'auth/wrong-password': 'Invalid email or password.',
+        'auth/user-not-found': 'Invalid email or password.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+        'auth/network-request-failed': 'Network error. Check your internet connection.',
+        'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
+        'auth/user-disabled': 'This account has been disabled.',
+      };
+      return messages[code] || 'An error occurred. Please try again.';
+    }
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+
+      if (!email || !password) {
+        showError('Please fill in all fields.');
+        return;
+      }
+
+      authBtn.disabled = true;
+      btnLabel.textContent = 'Authenticating...';
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        btnLabel.textContent = 'Verifying profile...';
+        const riderSnap = await getDoc(doc(db, 'riders', user.uid));
+
+        if (!riderSnap.exists()) {
+          await signOut(auth);
+          authBtn.disabled = false;
+          btnLabel.textContent = 'Sign In';
+          showError('No rider profile found. Please create your account first.');
+          return;
+        }
+
+        const riderData = riderSnap.data();
+        showSuccess(`Welcome back, ${riderData.name || 'Rider'}! Redirecting...`);
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+
+      } catch (error) {
+        console.error('[AUTH ERROR]', error.code, error.message);
+        authBtn.disabled = false;
+        btnLabel.textContent = 'Sign In';
+        showError(getFirebaseErrorMessage(error.code));
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Account — NovaShield</title>
+  <meta name="description" content="Create your NovaShield rider profile for smart two-wheeler safety." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="auth-page">
+    <div class="card card-elevated auth-card" style="max-width:540px;">
+      <a href="index.html" class="auth-back-link" id="back-link">← Back to Home</a>
+
+      <div style="text-align:center;margin-bottom:24px;">
+        <div class="navbar-logo" style="margin:0 auto 12px;width:48px;height:48px;font-size:1.3rem;">N</div>
+        <h2 id="page-title">Create Your Account</h2>
+        <p class="auth-subtitle" id="page-sub">Set up your NovaShield rider profile</p>
+      </div>
+
+      <form id="rider-form" class="auth-form" style="max-height:65vh;overflow-y:auto;padding-right:8px;">
+
+        <!-- Account Credentials (hidden in edit mode) -->
+        <div id="auth-section">
+          <p
+            style="font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">
+            Account Credentials</p>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <input type="email" name="email" id="reg-email" placeholder="rider@example.com" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-password">Password</label>
+            <input type="password" name="password" id="reg-password" placeholder="Min. 6 characters" class="form-input"
+              minlength="6" autocomplete="new-password" />
+          </div>
+
+          <p
+            style="font-size:0.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px;">
+            Rider Profile</p>
+        </div>
+
+        <!-- Rider Profile Fields -->
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input required type="text" name="name" placeholder="Enter your full name" class="form-input" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input required type="number" name="age" placeholder="27" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-input">
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Blood Group</label>
+            <select name="bloodGroup" class="form-input">
+              <option>A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B-</option>
+              <option>AB+</option>
+              <option>AB-</option>
+              <option selected>O+</option>
+              <option>O-</option>
+            </select>
+          </div>
+          <div class="form-group" id="profile-email-wrap" style="display:none;">
+            <label class="form-label">Email (read-only)</label>
+            <input type="email" name="emailDisplay" id="profile-email-display" class="form-input" readonly
+              style="opacity:0.6;cursor:default;" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input required type="tel" name="mobile" placeholder="+91 80000 00000" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Contact</label>
+            <input required type="tel" name="emergency" placeholder="+91 90000 00000" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input required type="text" name="address" placeholder="123 Sector 4, Cyber City" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Health Issues (optional)</label>
+          <input type="text" name="healthIssues" placeholder="e.g. Asthma, Hypertension" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Allergies (optional)</label>
+          <input type="text" name="allergies" placeholder="e.g. Penicillin, Peanuts" class="form-input" />
+        </div>
+
+        <div id="form-error" class="form-error"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;" id="submit-btn">
+          <span id="btn-label">Create Account</span>
+        </button>
+      </form>
+
+      <div class="auth-link-row" id="signin-row" style="margin-top:16px;">
+        Already have an account? <a href="login.html">Sign In →</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import {
+      onAuthStateChanged,
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+    let currentUser = null;
+    let isEditMode = false;
+
+    const form = document.getElementById('rider-form');
+    const btn = document.getElementById('submit-btn');
+    const btnLabel = document.getElementById('btn-label');
+    const authSection = document.getElementById('auth-section');
+    const errorEl = document.getElementById('form-error');
+    const signinRow = document.getElementById('signin-row');
+    const pageTitle = document.getElementById('page-title');
+    const pageSub = document.getElementById('page-sub');
+    const backLink = document.getElementById('back-link');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+
+    function clearError() {
+      errorEl.style.display = 'none';
+    }
+
+    // Detect if user is already logged in → edit profile mode
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        isEditMode = true;
+
+        // Switch UI to Edit Profile mode
+        pageTitle.textContent = 'Edit Rider Profile';
+        pageSub.textContent = 'Update your NovaShield rider information';
+        backLink.href = 'dashboard.html';
+        backLink.textContent = '← Back to Dashboard';
+        btnLabel.textContent = 'Save Changes';
+        authSection.style.display = 'none';
+        signinRow.style.display = 'none';
+
+        // Show read-only email
+        const emailWrap = document.getElementById('profile-email-wrap');
+        const emailDisplay = document.getElementById('profile-email-display');
+        if (emailWrap) emailWrap.style.display = 'block';
+        if (emailDisplay) emailDisplay.value = user.email || '';
+
+        // Pre-fill existing profile data
+        try {
+          const snap = await getDoc(doc(db, 'riders', user.uid));
+          if (snap.exists()) {
+            const d = snap.data();
+            form.querySelector('[name="name"]').value = d.name || '';
+            form.querySelector('[name="age"]').value = d.age || '';
+            form.querySelector('[name="gender"]').value = d.gender || 'Male';
+            form.querySelector('[name="bloodGroup"]').value = d.bloodGroup || 'O+';
+            form.querySelector('[name="mobile"]').value = d.mobile || '';
+            form.querySelector('[name="emergency"]').value = d.emergency || '';
+            form.querySelector('[name="address"]').value = d.address || '';
+            form.querySelector('[name="healthIssues"]').value = d.healthIssues || '';
+            form.querySelector('[name="allergies"]').value = d.allergies || '';
+          }
+        } catch (e) {
+          console.warn('[Profile] Could not pre-fill:', e);
+        }
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const data = Object.fromEntries(new FormData(form).entries());
+      delete data.password;
+      delete data.emailDisplay;
+
+      btn.disabled = true;
+
+      if (isEditMode) {
+        btnLabel.textContent = 'Saving...';
+        try {
+          await setDoc(doc(db, 'riders', currentUser.uid), data, { merge: true });
+          btnLabel.textContent = '✓ Saved — Redirecting';
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        } catch (err) {
+          btn.disabled = false;
+          btnLabel.textContent = 'Save Changes';
+          showError('Error saving profile. Check your connection and try again.');
+        }
+      } else {
+        const email = document.getElementById('reg-email').value.trim();
+        const password = document.getElementById('reg-password').value;
+
+        if (!email || !password) {
+          btn.disabled = false;
+          showError('Please enter your email and password to create an account.');
+          return;
+        }
+        if (password.length < 6) {
+          btn.disabled = false;
+          showError('Password must be at least 6 characters.');
+          return;
+        }
+        if (!data.name || !data.mobile || !data.emergency || !data.address) {
+          btn.disabled = false;
+          showError('Please fill in all required rider profile fields.');
+          return;
+        }
+
+        btnLabel.textContent = 'Creating account...';
+
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          btnLabel.textContent = 'Syncing profile...';
+          await setDoc(doc(db, 'riders', cred.user.uid), { ...data, email }, { merge: true });
+          btnLabel.textContent = '✓ All set — Launching Dashboard';
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+        } catch (err) {
+          btn.disabled = false;
+          btnLabel.textContent = 'Create Account';
+          const msg = {
+            'auth/email-already-in-use': 'An account with this email already exists. Try signing in.',
+            'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
+            'auth/invalid-email': 'Please enter a valid email address.',
+            'auth/network-request-failed': 'Network error. Check your internet connection.',
+          }[err.code] || 'An error occurred. Please try again.';
+          showError(msg);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

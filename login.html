@@ -51,23 +51,12 @@
   </main>
 
   <script type="module">
-    import { auth, db } from './firebase-config.js';
-    import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { API_URL, saveAuthData } from './api-config.js';
 
-    // If already logged in, verify rider profile exists before auto-redirect
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const riderSnap = await getDoc(doc(db, 'riders', user.uid));
-          if (riderSnap.exists()) {
-            window.location.href = 'dashboard.html';
-          }
-        } catch (e) {
-          console.warn('[AUTH] Could not verify rider profile:', e);
-        }
-      }
-    });
+    // If already logged in, redirect
+    if (localStorage.getItem('ns_token')) {
+      window.location.href = 'dashboard.html';
+    }
 
     const btnLabel = document.getElementById('auth-btn-label');
     const authForm = document.getElementById('auth-form');
@@ -87,18 +76,8 @@
       errorEl.style.display = 'none';
     }
 
-    function getFirebaseErrorMessage(code) {
-      const messages = {
-        'auth/invalid-credential': 'Invalid email or password.',
-        'auth/wrong-password': 'Invalid email or password.',
-        'auth/user-not-found': 'Invalid email or password.',
-        'auth/invalid-email': 'Please enter a valid email address.',
-        'auth/network-request-failed': 'Network error. Check your internet connection.',
-        'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
-        'auth/user-disabled': 'This account has been disabled.',
-      };
-      return messages[code] || 'An error occurred. Please try again.';
-    }
+
+
 
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -116,29 +95,28 @@
       successEl.style.display = 'none';
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
 
-        btnLabel.textContent = 'Verifying profile...';
-        const riderSnap = await getDoc(doc(db, 'riders', user.uid));
-
-        if (!riderSnap.exists()) {
-          await signOut(auth);
-          authBtn.disabled = false;
-          btnLabel.textContent = 'Sign In';
-          showError('No rider profile found. Please create your account first.');
-          return;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Login failed.');
         }
 
-        const riderData = riderSnap.data();
-        showSuccess(`Welcome back, ${riderData.name || 'Rider'}! Redirecting...`);
+        const data = await response.json();
+        saveAuthData(data);
+
+        showSuccess(`Welcome back, ${data.name || 'Rider'}! Redirecting...`);
         setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
 
       } catch (error) {
-        console.error('[AUTH ERROR]', error.code, error.message);
+        console.error('[AUTH ERROR]', error);
         authBtn.disabled = false;
         btnLabel.textContent = 'Sign In';
-        showError(getFirebaseErrorMessage(error.code));
+        showError(error.message);
       }
     });
   </script>

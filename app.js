@@ -1,8 +1,4 @@
-import { auth, db, rtdb } from './firebase-config.js';
-import { doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
+import { API_URL, WS_BASE_URL, getAuthHeaders, getUserId, clearAuthData, handleUnauthorized } from './api-config.js';
 /* ========================================================
    NOVASHIELD FRONTEND APPLICATION LOGIC
    Emergency Response & Telematics Platform
@@ -12,14 +8,28 @@ const BlackBox = (() => {
   const activeAnimations = {};
   let currentUser = null;
 
-  /* ---- Firebase Helpers ---- */
+  /* ---- API Helpers ---- */
   async function loadRider() {
-    if (!currentUser) return null;
+    const uid = getUserId();
+    if (!uid) return null;
     try {
-      const snap = await getDoc(doc(db, "riders", currentUser.uid));
-      return snap.exists() ? snap.data() : null;
+      const res = await fetch(`${API_URL}/medical?user_id=${uid}`, {
+        headers: getAuthHeaders()
+      });
+      if (handleUnauthorized(res)) return null;
+      if (res.ok) {
+        const d = await res.json();
+        // Map backend MedicalProfile to frontend object format
+        return {
+          name: d.full_name || 'Rider',
+          age: d.dob || '27',
+          bloodGroup: d.blood_group || 'O+',
+          emergency: d.emergency_contact_phone || '+91 90000 00000',
+        };
+      }
+      return null;
     } catch (e) {
-      console.error("[loadRider] Firestore error:", e);
+      console.error("[loadRider] API error:", e);
       return null;
     }
   }
@@ -122,6 +132,8 @@ const BlackBox = (() => {
     const simBtn = document.getElementById('sim-crash-btn');
     const cancelSosBtn = document.getElementById('cancel-sos-btn');
 
+    let wsConnection = null;
+
     function triggerCrashAlert() {
       isCrashed = 'alerting';
       live.speed = 0; live.lean = 85; live.g = 5.4;
@@ -165,6 +177,22 @@ const BlackBox = (() => {
       const timeStr = new Date().toTimeString().slice(0, 8);
       logs = [{ t: timeStr, m: '⚠ CRASH DETECTED! High G-force impact logged.', type: 'alert' }, ...logs].slice(0, 10);
       renderLog(logs);
+
+      // POST to backend Alerts
+      fetch(`${API_URL}/alerts`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          device_id: 'device_001',
+          event_type: 'crash_confirmed',
+          message: 'High G-force impact logged',
+          confidence: 0.95
+        })
+      }).catch(console.error);
+
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send("CONFIRMED_ACCIDENT");
+      }
 
       crashTimer = setInterval(() => {
         countdownVal--;
@@ -241,6 +269,17 @@ const BlackBox = (() => {
       const timeStr = new Date().toTimeString().slice(0, 8);
       logs = [{ t: timeStr, m: '✓ System reset. Telemetry normalized.', type: 'info' }, ...logs].slice(0, 10);
       renderLog(logs);
+
+      // Tell backend to cancel SOS
+      fetch(`${API_URL}/cancel-sos`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ device_id: 'device_001' })
+      }).catch(console.error);
+
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send("FALSE_ALARM");
+      }
     }
 
     if (simBtn) {
@@ -277,56 +316,100 @@ const BlackBox = (() => {
     }
 
     /* ---- Auth listener & Real-time listeners ---- */
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
+    const initApp = async () => {
+      const uid = getUserId();
+      if (!uid) {
         window.location.href = 'login.html';
         return;
       }
-      currentUser = user;
 
       const r = await loadRider() || { name: 'Rider', age: '27', bloodGroup: 'O+', emergency: '+91 90000 00000' };
       updateDashboardUI(r);
 
-      onSnapshot(doc(db, "riders", user.uid), (snap) => {
-        if (snap.exists()) updateDashboardUI(snap.data());
-      });
+      // Start WebSocket Telemetry Listener with auto-reconnect
+      const wsUrl = `${WS_BASE_URL}/ws/telemetry/device_001`;
+      let wsReconnectDelay = 1000;
+      const WS_MAX_RECONNECT_DELAY = 30000;
 
-      /* ESP32 Realtime Database Listener */
-      const telemetryRef = ref(rtdb, `telemetry/${user.uid}`);
-      onValue(telemetryRef, (snapshot) => {
-        hideSplash();
-        if (!snapshot.exists()) return;
-        const data = snapshot.val();
+      function connectWebSocket() {
+        wsConnection = new WebSocket(wsUrl);
 
-        if (!isCrashed) {
-          live.speed = data.speed ?? 0;
-          live.lean = data.lean ?? 0;
-          live.g = data.gforce ?? 0.0;
-          if (data.battery !== undefined) live.batt = data.battery;
+        wsConnection.onopen = () => {
+          hideSplash();
+          wsReconnectDelay = 1000; // reset on successful connection
+          const rtdbStatus = document.getElementById('rtdb-status');
+          if (rtdbStatus) rtdbStatus.textContent = '● WebSocket Live';
+        };
 
-          if (data.lat && data.lng) {
-            currentPos.lat = data.lat;
-            currentPos.lng = data.lng;
-            if (riderMarker) riderMarker.setLatLng([data.lat, data.lng]);
-            if (parentMarker) parentMarker.setLatLng([data.lat, data.lng]);
-            if (policeMarker) policeMarker.setLatLng([data.lat, data.lng]);
+        wsConnection.onmessage = (event) => {
+          hideSplash();
+          if (event.data === "CONFIRMED_ACCIDENT" && !isCrashed) {
+             triggerCrashAlert();
+             return;
+          }
+          if (event.data === "FALSE_ALARM") {
+             return;
           }
 
-          if (data.crash_detected && !isCrashed) {
-            triggerCrashAlert();
-          } else {
-            setLive();
+          try {
+            const data = JSON.parse(event.data);
+            if (!isCrashed) {
+              live.speed = data.speed_kmh ?? data.speed ?? 0;
+              live.lean = data.lean_angle ?? data.lean ?? 0;
+
+              // Calculate G-force from raw accelerometer or use direct value
+              let computedG = data.g_force ?? data.gforce ?? 0.0;
+              if (data.ax !== undefined) {
+                 computedG = Math.sqrt(data.ax*data.ax + data.ay*data.ay + data.az*data.az);
+              }
+              live.g = computedG;
+              if (data.battery !== undefined) live.batt = data.battery;
+
+              if (data.latitude && data.longitude) {
+                currentPos.lat = data.latitude;
+                currentPos.lng = data.longitude;
+                if (riderMarker) riderMarker.setLatLng([currentPos.lat, currentPos.lng]);
+                if (parentMarker) parentMarker.setLatLng([currentPos.lat, currentPos.lng]);
+                if (policeMarker) policeMarker.setLatLng([currentPos.lat, currentPos.lng]);
+              }
+
+              if (data.crash_detected && !isCrashed) {
+                triggerCrashAlert();
+              } else {
+                setLive();
+              }
+            }
+          } catch (_) {
+            // non-JSON control message, ignored
           }
-        }
-      });
-    });
+        };
+
+        wsConnection.onerror = () => {
+          const rtdbStatus = document.getElementById('rtdb-status');
+          if (rtdbStatus) rtdbStatus.textContent = '○ Reconnecting…';
+        };
+
+        wsConnection.onclose = () => {
+          const rtdbStatus = document.getElementById('rtdb-status');
+          if (rtdbStatus) rtdbStatus.textContent = '○ Disconnected';
+          // Auto-reconnect with exponential backoff
+          setTimeout(connectWebSocket, wsReconnectDelay);
+          wsReconnectDelay = Math.min(wsReconnectDelay * 2, WS_MAX_RECONNECT_DELAY);
+        };
+      }
+
+      connectWebSocket();
+    };
+
+    initApp();
 
     /* Logout Button */
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        signOut(auth).then(() => { window.location.href = 'index.html'; });
+        clearAuthData();
+        window.location.href = 'index.html';
       });
     }
 

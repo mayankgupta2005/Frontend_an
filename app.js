@@ -233,10 +233,8 @@ const BlackBox = (() => {
       isCrashed = false;
       if (overlay) overlay.classList.remove('show');
 
-      const sysStatusDot = document.getElementById('system-status-dot');
-      const sysStatusText = document.getElementById('system-status-text');
-      if (sysStatusDot) sysStatusDot.className = 'status-dot status-dot-green';
-      if (sysStatusText) sysStatusText.textContent = 'System Armed · Safe';
+      // Restore the UI based on current connection state
+      updateTelemetryUI(telemetryState);
 
       const parentCard = document.getElementById('parent-status-card');
       const parentIcon = document.getElementById('parent-status-icon');
@@ -315,6 +313,151 @@ const BlackBox = (() => {
       if (crashEmgNum) crashEmgNum.textContent = `Alerting ${r.emergency || '+91 90000 00000'}`;
     }
 
+    /* ---- Telemetry UX States ---- */
+    const TELEMETRY_TIMEOUT_MS = 10000;
+    let telemetryState = 'CONNECTING'; // CONNECTING, ONLINE, OFFLINE, STALE
+    let lastTelemetryTimestamp = 0;
+    
+    function updateTelemetryUI(state) {
+      telemetryState = state;
+      const sysBadge = document.getElementById('system-status-badge');
+      const sysDot = document.getElementById('system-status-dot');
+      const sysText = document.getElementById('system-status-text');
+      const rtdbStatus = document.getElementById('rtdb-status');
+      
+      const mapBadge = document.querySelector('.map-large-card .status-badge');
+      const parentMapBadge = document.querySelector('#parent-view .status-badge');
+      
+      // Admin MCU status
+      const adminCards = document.querySelectorAll('#admin-view .metric-card');
+      let mcuStatus = null;
+      adminCards.forEach(c => {
+         if (c.innerHTML.includes('ESP32 MCU Status')) {
+             mcuStatus = c.querySelector('.metric-value');
+         }
+      });
+      
+      // Update System Badge only if not alerting
+      if (sysBadge && sysDot && sysText && !isCrashed) {
+        if (state === 'ONLINE') {
+          sysBadge.className = 'status-badge status-safe';
+          sysBadge.style.background = '';
+          sysBadge.style.color = '';
+          sysDot.className = 'status-dot status-dot-green';
+          sysDot.style.background = '';
+          sysText.textContent = 'System Armed · Live Telemetry';
+        } else if (state === 'STALE') {
+          sysBadge.className = 'status-badge status-alert';
+          sysBadge.style.background = '#fff3cd';
+          sysBadge.style.color = '#856404';
+          sysDot.className = 'status-dot';
+          sysDot.style.background = '#ffc107';
+          sysText.textContent = 'No telemetry received recently · Showing last known data';
+        } else if (state === 'OFFLINE') {
+          sysBadge.className = 'status-badge';
+          sysBadge.style.background = '#e2e8f0';
+          sysBadge.style.color = '#475569';
+          sysDot.className = 'status-dot';
+          sysDot.style.background = '#64748b';
+          sysText.textContent = 'Device disconnected · Showing last known data';
+        } else if (state === 'CONNECTING') {
+          sysBadge.className = 'status-badge';
+          sysBadge.style.background = '#e0f2fe';
+          sysBadge.style.color = '#0369a1';
+          sysDot.className = 'status-dot';
+          sysDot.style.background = '#0284c7';
+          sysText.textContent = 'Connecting to device...';
+        }
+      }
+
+      // Update RTDB / Admin Badge
+      if (rtdbStatus) {
+        if (state === 'ONLINE') { rtdbStatus.textContent = '● RTDB Live'; rtdbStatus.className = 'status-badge status-online'; }
+        else if (state === 'STALE') { rtdbStatus.textContent = '● STALE'; rtdbStatus.className = 'status-badge status-alert'; }
+        else if (state === 'OFFLINE') { rtdbStatus.textContent = '○ OFFLINE'; rtdbStatus.className = 'status-badge'; }
+        else if (state === 'CONNECTING') { rtdbStatus.textContent = '○ CONNECTING…'; rtdbStatus.className = 'status-badge'; }
+      }
+      
+      if (mcuStatus) {
+         if (state === 'ONLINE') { mcuStatus.textContent = 'Online'; mcuStatus.className = 'metric-value text-accent'; mcuStatus.style.color = ''; }
+         else if (state === 'STALE') { mcuStatus.textContent = 'Stale'; mcuStatus.className = 'metric-value text-alert'; mcuStatus.style.color = '#856404'; }
+         else { mcuStatus.textContent = 'Offline'; mcuStatus.className = 'metric-value'; mcuStatus.style.color = '#64748b'; }
+      }
+
+      // Update Map Live Status
+      if (mapBadge) {
+        if (state === 'ONLINE') { mapBadge.textContent = '● GPS Live Sync'; mapBadge.className = 'status-badge status-online'; }
+        else { mapBadge.textContent = '○ Last Known GPS'; mapBadge.className = 'status-badge'; }
+      }
+      if (parentMapBadge) {
+        if (state === 'ONLINE') { parentMapBadge.textContent = '● GPS Live Sync'; parentMapBadge.className = 'status-badge status-online'; }
+        else { parentMapBadge.textContent = '○ Last Known GPS'; parentMapBadge.className = 'status-badge'; }
+      }
+
+      // Additional label adjustments for stale state
+      const values = document.querySelectorAll('.stat-card-value, .safe-banner-value');
+      values.forEach(val => {
+        if (!val.dataset.base) val.dataset.base = val.textContent;
+        if (state === 'ONLINE') {
+          val.textContent = val.dataset.base;
+          val.style.color = '';
+        } else {
+          if (!val.textContent.includes(' (Last Known)')) {
+            val.textContent = `${val.dataset.base} (Last Known)`;
+            val.style.color = '#64748b';
+          }
+        }
+      });
+    }
+
+    // Interval to calculate elapsed time for "Last Updated"
+    setInterval(() => {
+      const safeSubtitle = document.querySelector('.safe-banner-subtitle');
+      const mapCoords = document.getElementById('map-coords');
+      
+      if (lastTelemetryTimestamp === 0) {
+        if (safeSubtitle) safeSubtitle.textContent = `Waiting for telemetry...`;
+        if (mapCoords) {
+           if (!mapCoords.dataset.original) mapCoords.dataset.original = mapCoords.textContent.trim();
+           mapCoords.textContent = `${mapCoords.dataset.original} · (Waiting for data)`;
+        }
+        return;
+      }
+      
+      const elapsed = Date.now() - lastTelemetryTimestamp;
+      
+      // Stale check
+      if (elapsed > TELEMETRY_TIMEOUT_MS && telemetryState === 'ONLINE') {
+        updateTelemetryUI('STALE');
+      }
+
+      // Format elapsed time
+      let timeStr = 'Just now';
+      if (elapsed >= 1000) {
+        const sec = Math.floor(elapsed / 1000);
+        if (sec < 60) {
+          timeStr = `${sec} sec ago`;
+        } else {
+          timeStr = `${Math.floor(sec / 60)} min ago`;
+        }
+      }
+
+      if (safeSubtitle) {
+        safeSubtitle.textContent = `Last Updated: ${timeStr}`;
+      }
+      
+      if (mapCoords) {
+        if (!mapCoords.dataset.original) {
+          mapCoords.dataset.original = mapCoords.textContent.trim();
+        }
+        if (telemetryState !== 'ONLINE') {
+          mapCoords.textContent = `${mapCoords.dataset.original} · (Last Known: ${timeStr})`;
+        } else {
+          mapCoords.textContent = mapCoords.dataset.original;
+        }
+      }
+    }, 1000);
+
     /* ---- Auth listener & Real-time listeners ---- */
     const initApp = async () => {
       const uid = getUserId();
@@ -337,8 +480,7 @@ const BlackBox = (() => {
         wsConnection.onopen = () => {
           hideSplash();
           wsReconnectDelay = 1000; // reset on successful connection
-          const rtdbStatus = document.getElementById('rtdb-status');
-          if (rtdbStatus) rtdbStatus.textContent = '● WebSocket Live';
+          updateTelemetryUI('CONNECTING'); // Wait for first payload to go ONLINE
         };
 
         wsConnection.onmessage = (event) => {
@@ -353,6 +495,13 @@ const BlackBox = (() => {
 
           try {
             const data = JSON.parse(event.data);
+            
+            // Mark telemetry as received
+            lastTelemetryTimestamp = Date.now();
+            if (telemetryState !== 'ONLINE') {
+              updateTelemetryUI('ONLINE');
+            }
+
             if (!isCrashed) {
               live.speed = data.speed_kmh ?? data.speed ?? 0;
               live.lean = data.lean_angle ?? data.lean ?? 0;
@@ -385,15 +534,16 @@ const BlackBox = (() => {
         };
 
         wsConnection.onerror = () => {
-          const rtdbStatus = document.getElementById('rtdb-status');
-          if (rtdbStatus) rtdbStatus.textContent = '○ Reconnecting…';
+          updateTelemetryUI('OFFLINE');
         };
 
         wsConnection.onclose = () => {
-          const rtdbStatus = document.getElementById('rtdb-status');
-          if (rtdbStatus) rtdbStatus.textContent = '○ Disconnected';
+          updateTelemetryUI('OFFLINE');
           // Auto-reconnect with exponential backoff
-          setTimeout(connectWebSocket, wsReconnectDelay);
+          setTimeout(() => {
+            updateTelemetryUI('CONNECTING');
+            connectWebSocket();
+          }, wsReconnectDelay);
           wsReconnectDelay = Math.min(wsReconnectDelay * 2, WS_MAX_RECONNECT_DELAY);
         };
       }
